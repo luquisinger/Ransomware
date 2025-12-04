@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-
 import os   
-print("Executando arquivo:", __file__)
-def discover(inicial_path, extensions=None):
-     # Lista de extensões padrão
+
+def discover(initial_path, extensions=None):
+    # Lista de extensões padrão (só usamos se nada for passado)
     if extensions is None:
         extensions = [
             # Documentos
@@ -22,18 +21,16 @@ def discover(inicial_path, extensions=None):
             # Arquivos compactados
             "zip", "rar", "7z", "tar", "gz",
 
-            # Código (úteis para análise/logs/estudo)
+            # Código e configs
             "py", "js", "java", "c", "cpp", "cs", "html", "css", "json", "xml", "yml"
         ]
 
-    for dirpath, dirs, files in os.walk(inicial_path):
+    for dirpath, dirs, files in os.walk(initial_path):
         for file in files:
-            absolute_path = os.path.abspath(os.path.join(dirpath, file))
-            ext = absolute_path.split('.')[-1].lower()
-            if ext in extensions:
-                yield absolute_path
+            full_path = os.path.abspath(os.path.join(dirpath, file))
 
-if __name__ == "__main__":
-    x = discover(os.getcwd())
-    for i in x:
-        print(i)
+            # Pega apenas a extensão
+            ext = full_path.split('.')[-1].lower()
+
+            if ext in extensions:
+                yield full_path
